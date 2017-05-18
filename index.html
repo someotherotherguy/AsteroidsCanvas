@@ -1,0 +1,36 @@
+<!-- StarCatcher Game for David's Soft Dev class 2015-->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>StarCatcher - Software Development</title>
+<!--    our link to the javascript file that will control the game actions -->
+    <script type="text/javascript" src="scScriptsObj.js"></script> <!-- IMPORTANT! Script is currently linked to scScriptsObjs.js, not scScripts.js-->
+<!--    out styles will be internal until we need to move them to an external file -->
+    <style type="text/css">
+        html, body {margin: 5px;
+            text-align: center;}
+        canvas {display: block;}
+        #game {
+            margin-left: auto;
+            margin-right: auto;
+            width: 800px;
+            height: 500px;
+            background-color: black;
+            border-radius: 10px;
+        }
+        .centerText {text-align: center;}
+        #initialize{
+            /*margin-left: auto;
+            margin-right: auto;*/
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2 class="centerText">Game ON!</h2>
+    <div id="game">
+        <canvas id="myCanvas"></canvas>
+    </div>
+    <button onclick="toggleGame()" id="initialize">INITIALIZE THE GAME. Please.</button>
+</body>
+</html>
