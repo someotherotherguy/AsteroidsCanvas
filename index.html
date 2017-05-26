@@ -24,6 +24,9 @@
             margin-right: auto;*/
             margin-top: 10px;
         }
+        .p2 {
+            padding-left: 15px;
+        }
     </style>
 </head>
 <body>
@@ -32,5 +35,19 @@
         <canvas id="myCanvas"></canvas>
     </div>
     <button onclick="toggleGame()" id="initialize">INITIALIZE THE GAME. Please.</button>
+    <table>
+        <tr>
+            <th>Player 1</th>
+            <th class="p2">Player 2</th>
+        </tr>
+        <tr>
+            <td id="p1Lives">Lives: 3</td>
+            <td class="p2" id="p2Lives">Lives: 3</td>
+        </tr>
+        <tr>
+            <td id="p1Score">Score: 0</td>
+            <td class="p2" id="p2Score">Score: 0</td>
+        </tr>
+    </table>
 </body>
 </html>

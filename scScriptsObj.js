@@ -15,18 +15,18 @@ window.onload = function() {
         //Create new star object with given starting position and speed
         //class functions exist to set other private variables
         //All inputs are double and function returns a new star
-        create: function (x, y, xSpeed, ySpeed) {
+        create: function (x, y, xSpeed, ySpeed, width, height) {
             var obj = Object.create(this);
             obj._x = x;
             obj._y = y;
             obj._xSpeed=xSpeed;
             obj._ySpeed=ySpeed;
-            obj._width=20;
-            obj._height=20;
+            obj._width=60;
+            obj._height=60;
             obj._wh= obj._width/2;
             obj._hh= obj._height/2;
             obj._hmhh= h - obj._hh;
-            obj_wmwh= w - obj._wh;
+            obj._wmwh= w - obj._wh;
             obj._rot= 0;
             obj._img = new Image();
             obj._img.src="images/star.png";
@@ -44,9 +44,16 @@ window.onload = function() {
             this._x+=this._xSpeed;
             this._y+=this._ySpeed;
         },
-        setSize: function() {
-            this._width += 5;
-            this._height += 5;
+        setSize: function(width, height, num) {
+            // this._width += 5;
+            // this._height += 5;
+            // this._wh= this._width/2;
+            // this._hh= this._height/2;
+            // this._hmhh= h - this._hh;
+            // this._wmwh= w - this._wh;
+            starCount ++; //could be buggy, consider starCount = starArray.length;
+            starArray.push(this.create(starArray[num]._x - starArray[num]._wh, starArray[num]._y - starArray[num]._hh, -1*starArray[num]._xSpeed, -1*starArray[num]._ySpeed, starArray[num]._height/2, starArray[num]._width/2));
+            starArray[num] = this.create(starArray[num]._x, starArray[num]._y, starArray[num]._xSpeed, starArray[num]._ySpeed, starArray[num]._height/2, starArray[num]._width/2);
         }
     } //close star
 
@@ -59,17 +66,22 @@ window.onload = function() {
         // this assigns each element in the array all the information for the star by 
         // using the 'star' class, pass the starting x,y locations 
         //  and speeds into the array.
-        starArray.push(star.create(20,i+50,2-Math.random()*5,2-Math.random()*5));
+        // var neg1 = Math.random(), neg2 = Math.random();
+        // if (neg1 > 0.5) {neg1 = 1;} else {neg1 = -1;}
+        // if (neg2 > 0.5) {neg2 = 1;} else {neg2 = -1;}
+
+        starArray.push(star.create(-20,i-50,1-Math.random()*2,1-Math.random()*2));
     }
 
     var ships = {
         p1: {
             _number: 1,
             _img: new Image(),
+            _isVisible: true,
             _x: w/2+100,
             _y: h/2,
-            _width: 60,
-            _height: 60,
+            _width: 50,
+            _height: 50,
             _wh: 30,
             _hh: 30,
             //_hmhh: h - this._hh,
@@ -77,15 +89,21 @@ window.onload = function() {
             _xSpeed: 0,
             _ySpeed: 0,
             _rot: 0,
-            _accel: false
+            _accel: false,
+            _score: 0,
+            _isInvinc: false,
+            _invIncTime: 300,
+            _lives: 3,
+            _playing: true
         },
         p2: {
             _number: 2,
             _img: new Image(),
+            _isVisible: true,
             _x: w/2-100,
             _y: h/2,
-            _width: 60,
-            _height: 60,
+            _width: 50,
+            _height: 50,
             _wh: 30, //half width
             _hh: 30, //half height
             //_hmhh: h - this._hh, //canvas height minus half  height
@@ -93,18 +111,27 @@ window.onload = function() {
             _xSpeed: 0,
             _ySpeed: 0,
             _rot: 0,
-            _accel: false
+            _accel: false,
+            _score: 0,
+            _isInvinc: false,
+            _invIncTime: 300,
+            _lives: 3,
+            _playing: true
         }
     } //close ships
 
     gameOn = false;
     startScreen = true, doStartScreen = true, startScreenCycle = 0;
+    gameCounter = 0;
 
     ships.p1._hmhh = h - ships.p1._hh, ships.p1._wmwh = w - ships.p1._hh, ships.p1._nWtwo = -ships.p1._w/2, ships.p1._nHtwo = -ships.p1._h/2;
     ships.p2._hmhh = h - ships.p2._wh, ships.p2._wmwh = w - ships.p2._wh, ships.p2._nWtwo = -ships.p2._w/2, ships.p2._nHtwo = -ships.p2._h/2;
 
     ships.p1._img.src="images/spaceship1.png";
     ships.p2._img.src="images/spaceship2.png";
+
+    ships.p1._livesCounter = document.getElementById("p1Lives");
+    ships.p2._livesCounter = document.getElementById("p2Lives");    
 
     // moving stars around the screen and update the players movement
     function starsUpdate () {
@@ -116,8 +143,8 @@ window.onload = function() {
                 drawOver(starArray[i]);
                 // if (starArray[i]._x>w || starArray[i]._x<0) {starArray[i]._xSpeed = -starArray[i]._xSpeed}
                 // if (starArray[i]._y>h || starArray[i]._y<0) {starArray[i]._ySpeed = -starArray[i]._ySpeed}
-                testBoundaries(starArray[i]);
-                if (Math.abs(ships.p1_x-starArray[i]._x)<20 && Math.abs(ships.p1_y-starArray[i]._y)<20) {starArray[i].setSize(20,20);}
+                if (gameCounter > 299) {testBoundaries(starArray[i]);}
+                playerCollision(starArray[i], i);
             }//endFor
 
     } //close starsUpdate
@@ -134,6 +161,66 @@ window.onload = function() {
                 if(objPos._y<0){
                     objPos._y = h;
                 }
+    }
+
+    function playerCollision(star, num) {
+        if (Math.abs(ships.p1._x-star._x)<20 && Math.abs(ships.p1._y-star._y)<20 && !ships.p1._isInvinc) {
+            //star.setSize(20,20, num);
+            ships.p1._lives --;
+            ships.p1._isInvinc = true;
+            ships.p1._livesCounter.innerHTML = "Lives: " + ships.p1._lives;
+            ships.p1._x = w/2, ships.p1._y = h/2;
+            ships.p1._xSpeed = ships.p1._ySpeed = ships.p1._rot = 0;
+        }
+        if (Math.abs(ships.p2._x-star._x)<20 && Math.abs(ships.p2._y-star._y)<20 && !ships.p2._isInvinc) {
+            //star.setSize(20,20, num);
+            ships.p2._lives --;
+            ships.p2._isInvinc = true;
+            ships.p2._livesCounter.innerHTML = "Lives: " + ships.p2._lives;
+            ships.p2._x = w/2 - 100, ships.p2._y = h/2;
+            ships.p2._xSpeed = ships.p2._ySpeed = ships.p2._rot = 0;
+        }
+    }
+
+    function invincTimeInc() {
+        if (ships.p1._isInvinc && ships.p1._invIncTime > 0) {
+            ships.p1._invIncTime --;
+            if (ships.p1._invIncTime > 240 && ships.p1._accel) {
+                ships.p1._accel = false;
+            }
+            if (ships.p1._invIncTime < 240) {
+                if (ships.p1._invIncTime % 10 == 0) {
+                    if (ships.p1._invIncTime % 20 == 0) {
+                        ships.p1._isVisible = true;
+                    } else {ships.p1._isVisible = false;}
+                }
+            } else {
+                ships.p1._isVisible = false;
+            }
+        } else if (ships.p1._invIncTime == 0) {
+            ships.p1._invIncTime = 300;
+            ships.p1._isInvinc = false;
+            ships.p1._isVisible = true;
+        }
+        if (ships.p2._isInvinc && ships.p2._invIncTime > 0) {
+            ships.p2._invIncTime --;
+            if (ships.p2._invIncTime > 240 && ships.p2._accel) {
+                ships.p2._accel = false;
+            }
+            if (ships.p2._invIncTime < 240) {
+                if (ships.p2._invIncTime % 10 == 0) {
+                    if (ships.p2._invIncTime % 20 == 0) {
+                        ships.p2._isVisible = true;
+                    } else {ships.p2._isVisible = false;}
+                }
+            } else {
+                ships.p2._isVisible = false;
+            }
+        } else if (ships.p2._invIncTime == 0) {
+            ships.p2._invIncTime = 300;
+            ships.p2._isInvinc = false;
+            ships.p2._isVisible = true;
+        }
     }
     // draw player  (add a drawImage command here for your player)
 
@@ -195,6 +282,8 @@ window.onload = function() {
         }
         //console.log(keysDown);
         //test to see if x/y position should change to other side of screen
+        invincTimeInc();
+
         testBoundaries(ships.p1);
         testBoundaries(ships.p2);
 
@@ -207,8 +296,10 @@ window.onload = function() {
 
     function calcVelocity(ship) {
         if (ship._accel) {
-            ship._xSpeed += Math.sin(ship._rot)/5;
-            ship._ySpeed += Math.cos(ship._rot)/5;
+            ship._xSpeed += Math.sin(ship._rot)/4;
+            ship._xSpeed /= 1.02;
+            ship._ySpeed += Math.cos(ship._rot)/4;
+            ship._ySpeed /= 1.02;
             ship._img.src="images/spaceship" + ship._number + "-fire.png";//DOES NOT WORK WITH OTHER SHIP
             ship._accel = false;
         } else {
@@ -267,6 +358,7 @@ window.onload = function() {
 
         // save the unrotated context of the canvas so we can restore it later
         // the alternative is to untranslate & unrotate after drawing
+        if (obj._isVisible) {
         ctx.save();
 
         // move to the center of the canvas
@@ -278,7 +370,7 @@ window.onload = function() {
         // draw the image
         // since the context is rotated, the image will be rotated also
         //ctx.drawImage(obj._img, -obj._width/2, -obj._height/2, obj._width, obj._height);//obj._x-obj._wh, obj._y-obj._hh, 
-        ctx.drawImage(obj._img, -30, -30, 60, 60);
+        ctx.drawImage(obj._img, -25, -25, obj._width, obj._height);
         // if (obj._x <= obj._wh) {
         //     ctx.drawImage(obj._img, w + (obj._x - obj._wh), obj._y-obj._hh, obj._width, obj._height);
         // } else if (obj._x >= obj._wmwh) {
@@ -292,6 +384,7 @@ window.onload = function() {
 
         // we’re done with the rotating so restore the unrotated context
         ctx.restore();
+        }
     }
 
     //Our main function which clears the screens 
@@ -299,6 +392,9 @@ window.onload = function() {
     //  then calls itself out again
     function main(){
         if (gameOn) {
+            if (gameCounter < 300) {
+                gameCounter ++;
+            }
             ctx.clearRect(0,0,w,h);
             starsUpdate();
             playerUpdate();
