@@ -93,7 +93,7 @@ window.onload = function() {
             _score: 0,
             _isInvinc: false,
             _invIncTime: 300,
-            _lives: 3,
+            _lives: 1,
             _playing: true
         },
         p2: {
@@ -115,12 +115,12 @@ window.onload = function() {
             _score: 0,
             _isInvinc: false,
             _invIncTime: 300,
-            _lives: 3,
+            _lives: 1,
             _playing: true
         }
     } //close ships
 
-    gameOn = false;
+    gameOn = gameEnd = false;
     startScreen = true, doStartScreen = true, startScreenCycle = 0;
     gameCounter = 0;
 
@@ -166,6 +166,7 @@ window.onload = function() {
     function playerCollision(star, num) {
         if (Math.abs(ships.p1._x-star._x)<20 && Math.abs(ships.p1._y-star._y)<20 && !ships.p1._isInvinc) {
             //star.setSize(20,20, num);
+            endGame(1);
             ships.p1._lives --;
             ships.p1._isInvinc = true;
             ships.p1._livesCounter.innerHTML = "Lives: " + ships.p1._lives;
@@ -174,6 +175,7 @@ window.onload = function() {
         }
         if (Math.abs(ships.p2._x-star._x)<20 && Math.abs(ships.p2._y-star._y)<20 && !ships.p2._isInvinc) {
             //star.setSize(20,20, num);
+            endGame(2);
             ships.p2._lives --;
             ships.p2._isInvinc = true;
             ships.p2._livesCounter.innerHTML = "Lives: " + ships.p2._lives;
@@ -263,6 +265,7 @@ window.onload = function() {
             //ships.p2._x += 5;
             ships.p2._rot += (1/36)*Math.PI;
         }
+        
 
         // player one hodling key down
         if (37 in keysDown) { // P2 holding down (key: left arrow)
@@ -420,8 +423,18 @@ window.onload = function() {
                 gameOn = true;
             }
             startScreenCycle ++;
+        } else if (gameEnd) {
+            ctx.font = "54px Roboto";
+            ctx.fillText(playerLost, 300, 100);
+            ctx.fillStyle = "red";
         }
         requestAnimationFrame(main); //TODO: figure out how to reference main function in toggleGame, then only request Animationframe if gameOn is true.
+    }
+
+    function endGame(loser) {
+        gameEnd = true;
+        gameOn = false;
+        playerLost = "Player " + loser + " lost";
     }
     main();
 } //initiate end
